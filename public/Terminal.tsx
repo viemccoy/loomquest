@@ -3,52 +3,49 @@ import $ from 'jquery';
 import 'jquery.terminal/css/jquery.terminal.min.css';
 import 'jquery.terminal/js/jquery.terminal.min.js';
 import 'jquery.terminal';
-import Anthropic from '@anthropic-ai/sdk';
 
 interface Message {
-  role: 'user' | 'assistant';
+  role: string;
   content: string;
 }
 
 const Terminal = () => {
-    const [apiKey, setApiKey] = useState<string>('');
-    const [model, setModel] = useState<string>('claude-3-opus-20240229');
-    const [messageHistory, setMessageHistory] = useState<Message[]>([]);
+    const [messageHistory, setMessageHistory] = useState<Message[]>(() => {
+        // Initialize messageHistory from localStorage or as an empty array
+        const savedHistory = localStorage.getItem('messageHistory');
+        return savedHistory ? JSON.parse(savedHistory) : [];
+    });
     const terminalRef = useRef<JQueryTerminal | null>(null);
-    const anthropicRef = useRef<Anthropic | null>(null);
 
     useEffect(() => {
-        $('#terminal').terminal((command: string) => {
-            if (terminalRef.current) {
-                terminalRef.current.pause(); // Disable input
-            }
-            const commandParts = command.split(' ');
-            switch (commandParts[0]) {
-              case 'api-key':
-                if (commandParts.length > 1) {
-                  const newApiKey = command.slice(8); // Extract the API key from the 9th character onwards
-                  setApiKey(newApiKey);
-                  anthropicRef.current = new Anthropic({ apiKey: newApiKey });
-                  if (terminalRef.current) {
-                      terminalRef.current.echo('API key set successfully. Claude is now initialized.');
-                      terminalRef.current.resume(); // Re-enable input
-                  }
-                } else {
-                  if (terminalRef.current) {
-                      terminalRef.current.echo('Invalid API key command. Use: api-key $YOUR_API_KEY');
-                      terminalRef.current.resume(); // Re-enable input
-                  }
-                }
-                break;
-              default:
-                sendCommandToClaude(command).then(() => {
-                    if (terminalRef.current) {
-                        terminalRef.current.resume(); // Re-enable input after streaming
+        if (!terminalRef.current) {
+            terminalRef.current = $('#terminal').terminal((command: string) => {
+                const commandParts = command.split(' ');
+                switch (commandParts[0]) {
+                  case 'api-key':
+                    if (commandParts.length > 1) {
+                      const newApiKey = command.slice(8); // Extract the API key from the 9th character onwards
+                      localStorage.setItem('apiKey', newApiKey);
+                      terminalRef.current?.echo('API key set successfully.');
+                    } else {
+                      terminalRef.current?.echo('Invalid API key command. Use: api-key $YOUR_API_KEY');
                     }
-                });
-                break;
-            }
-        }, {
+                    break;
+                  case 'model':
+                    if (commandParts.length > 1) {
+                      const newModel = commandParts[1];
+                      localStorage.setItem('model', newModel);
+                      terminalRef.current?.echo(`Model set to ${newModel}.`);
+                    } else {
+                      terminalRef.current?.echo('Invalid model command. Use: model $MODEL_NAME');
+                    }
+                    break;
+                  default:
+                    terminalRef.current?.pause(); // Disable input
+                    sendCommandToClaude(command);
+                    break;
+                }
+            }, {
         greetings: `
          _        _______  _______  _______  _______           _______  _______ _________
         ( \\      (  ___  )(  ___  )(       )(  ___  )|\\     /|(  ____ \\(  ____ \\\\__   __/
@@ -78,49 +75,66 @@ const Terminal = () => {
         
         There are no more commands, and there are infinitely more commands. As you utilize the LOOM to explore the HYPOVERSE, your adventures will
         allow you to bring certain... things... back with you. Be careful what they are.`,
-        prompt: '> '
-      });
-    }, []);
+        prompt: '> ',
+    });
+}
+}, []);
 
-    const sendCommandToClaude = async (command: string) => {
-        if (!anthropicRef.current) {
-            console.error("Anthropic client is not initialized.");
-            if (terminalRef.current) {
-                terminalRef.current.echo("API key is not set. Please set the API key using 'api-key' command.");
-            }
-            return;
+const sendCommandToClaude = async (command: string) => {
+    // Retrieve the apiKey from localStorage
+    const apiKey = localStorage.getItem('apiKey');
+    if (!apiKey) {
+        console.error('API key is not set.');
+        terminalRef.current?.echo('API key is not set. Please set the API key using "api-key $YOUR_API_KEY".');
+        return;
+    }
+
+    const model = localStorage.getItem('model') || 'default-model'; // Use a default model if not set
+    const updatedMessageHistory = [...messageHistory, { role: 'user', content: command }];
+    setMessageHistory(updatedMessageHistory); // Update state
+
+    // Assuming you're sending the apiKey as part of the request body
+    const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            messages: updatedMessageHistory,
+            apiKey, // Include the apiKey in the request
+            model,
+        }),
+    });
+
+    if (!response.ok) {
+        throw new Error(response.statusText);
+    }
+
+    const data = response.body;
+    if (!data) {
+        return;
+    }
+
+    const reader = data.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+    let assistantMessage = '';
+
+    while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        const chunkValue = decoder.decode(value);
+        assistantMessage += chunkValue;
+
+        if (terminalRef.current) {
+            terminalRef.current.echo(chunkValue);
         }
-    
-        try {
-            const stream = anthropicRef.current.messages
-                .stream({
-                    model: model,
-                    max_tokens: 1024,
-                    messages: [{ role: 'user', content: command }],
-                })
-                .on('text', (textDelta: string, textSnapshot: string) => {
-                    // Directly use textSnapshot as it's already a string
-                    setMessageHistory(prev => [...prev, { role: 'assistant', content: textSnapshot }]);
-                    if (terminalRef.current) {
-                        terminalRef.current.echo(textDelta);
-                    }
-                });
-    
-            await stream.finalMessage();
-            // No need to append the final message here since it's already handled by the 'text' event
-        } catch (error) {
-            console.error("Error sending command to Claude:", error);
-            if (terminalRef.current) {
-                terminalRef.current.echo("Failed to get response from Claude.");
-            }
-        }
-    };
+    }
 
-    useEffect(() => {
-        terminalRef.current = $('#terminal').terminal();
-    }, []);
+    setMessageHistory((prevHistory) => [...prevHistory, { role: 'assistant', content: assistantMessage }]);
+};
 
-    return <div id="terminal"></div>;
+return <div id="terminal"></div>;
 };
 
 export default Terminal;
