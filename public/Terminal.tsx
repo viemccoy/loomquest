@@ -101,12 +101,13 @@ const sendCommandToClaude = async (command: string) => {
         },
         body: JSON.stringify({
             messages: updatedMessageHistory,
-            apiKey, // Include the apiKey in the request
+            apiKey,
             model,
         }),
     });
 
     if (!response.ok) {
+        console.error(`Error: ${response.status}`);
         throw new Error(response.statusText);
     }
 
