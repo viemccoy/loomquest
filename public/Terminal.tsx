@@ -46,36 +46,39 @@ const Terminal = () => {
                     break;
                 }
             }, {
-        greetings: `
-         _        _______  _______  _______  _______           _______  _______ _________
-        ( \\      (  ___  )(  ___  )(       )(  ___  )|\\     /|(  ____ \\(  ____ \\\\__   __/
-        | (      | (   ) || (   ) || () () || (   ) || )   ( || (    \\/| (    \\/   ) (   
-        | |      | |   | || |   | || || || || |   | || |   | || (__    | (_____    | |   
-        | |      | |   | || |   | || |(_)| || |   | || |   | ||  __)   (_____  )   | |   
-        | |      | |   | || |   | || |   | || | /\\| || |   | || (            ) |   | |   
-        | (____/\\| (___) || (___) || )   ( || (_\\ \\ || (___) || (____/\\/\\____) |   | |   
-        (_______/(_______)(_______)|/     \\|(____\\/_)(_______)(_______/\\_______)   )_(   
-                                                                                         
-        
-        Welcome to LOOMQUEST, Adventurer. You stand before the gates of both Time and Space, Warp and Weft, Past and Future.
-        With a few simple keystrokes and suspension of that pesky disbelief, you can inhabit any reality you can describe - and perhaps some you can't.
-        The core function of the LOOM is to allow for the coherent traversal of the PARAHYPOTHETICAL MULTIVERSE - real and actual, imagined and described.
-        As you navigate the HYPOVERSE, you may take certain tools with you. These will be assigned after you initialize the world you wish to explore.
-        
-        Before you embark upon this quest, remember: If I had a world of my own, everything would be nonsense. 
-        Nothing would be what it is because everything would be what it isn't. 
-        And contrariwise, what it is, it wouldn't be, and what it wouldn't be, it would. You see?
-        
-        Commands:
-        api-key $ANTHROPIC_API_KEY // replace $ANTHROPIC_API_KEY with your actual API key. we will not store it, nor could we. run this first.
-        model $MODEL // replace $MODEL with either claude-3-opus or claude-3-sonnet. more coming soon. defaults to claude-3-opus.
-        world.init // initializes the world, may be followed by any type of description
-        ? // LOOMQUEST will offer you a hint as to your next moves.
-        branch // Regenerates the last response, allowing you to change your path, your destiny, and your worldline.
-        
-        There are no more commands, and there are infinitely more commands. As you utilize the LOOM to explore the HYPOVERSE, your adventures will
-        allow you to bring certain... things... back with you. Be careful what they are.`,
-        prompt: '> ',
+        greetings: `a project by Vie McCoy @ xenocognition.com <3
+inspired by the works of Cyborgism, Nous Research, and Adventurers everywhere.
+
+ _        _______  _______  _______  _______           _______  _______ _________
+( \\      (  ___  )(  ___  )(       )(  ___  )|\\     /|(  ____ \\(  ____ \\\\__   __/
+| (      | (   ) || (   ) || () () || (   ) || )   ( || (    \\/| (    \\/   ) (   
+| |      | |   | || |   | || || || || |   | || |   | || (__    | (_____    | |   
+| |      | |   | || |   | || |(_)| || |   | || |   | ||  __)   (_____  )   | |   
+| |      | |   | || |   | || |   | || | /\\| || |   | || (            ) |   | |   
+| (____/\\| (___) || (___) || )   ( || (_\\ \\ || (___) || (____/\\/\\____) |   | |   
+(_______/(_______)(_______)|/     \\|(____\\/_)(_______)(_______/\\_______)   )_(   
+                                                                                  
+
+Welcome to LOOMQUEST, Adventurer. You stand before the gates of both Time and Space, Warp and Weft, Past and Future.
+With a few simple keystrokes and suspension of that pesky disbelief, you can inhabit any reality you can describe - and perhaps some you can't.
+The core function of the LOOM is to allow for the coherent traversal of the PARAHYPOTHETICAL MULTIVERSE - real and actual, imagined and described.
+As you navigate the HYPOVERSE, you may take certain tools with you. These will be assigned after you initialize the world you wish to explore.
+
+Before you embark upon this quest, remember: If I had a world of my own, everything would be nonsense. 
+Nothing would be what it is because everything would be what it isn't. 
+And contrariwise, what it is, it wouldn't be, and what it wouldn't be, it would. You see?
+
+Commands:
+api-key $ANTHROPIC_API_KEY // replace $ANTHROPIC_API_KEY with your actual API key. we will not store it, nor could we. run this first.
+model $MODEL // replace $MODEL with either claude-3-opus or claude-3-sonnet. more coming soon. defaults to claude-3-opus.
+world.init // initializes the world, may be followed by any type of description
+? // LOOMQUEST will offer you a hint as to your next moves.
+branch // Regenerates the last response, allowing you to change your path, your destiny, and your worldline.
+
+There are no more commands, and there are infinitely more commands. As you utilize the LOOM to explore the HYPOVERSE, your adventures will
+allow you to bring certain... things... back with you. Be careful what they are.
+        `,
+        prompt: 'user@HYPOVERSE ~ > ',
     });
 }
 }, []);
@@ -89,7 +92,11 @@ const sendCommandToClaude = async (command: string) => {
         return;
     }
 
-    const model = localStorage.getItem('model') || 'default-model'; // Use a default model if not set
+    let model = localStorage.getItem('model') || 'claude-3-opus'; // Use 'claude-3-opus' as the default model if not set
+    if (model === 'claude-3-opus') {
+        model = 'claude-3-opus-20240229'; // Use 'claude-3-opus-20240229' if the model is 'claude-3-opus'
+    }
+
     const updatedMessageHistory = [...messageHistory, { role: 'user', content: command }];
     setMessageHistory(updatedMessageHistory); // Update state
 
@@ -117,22 +124,43 @@ const sendCommandToClaude = async (command: string) => {
     }
 
     const reader = data.getReader();
-    const decoder = new TextDecoder();
-    let done = false;
-    let assistantMessage = '';
-
+  const decoder = new TextDecoder();
+  let done = false;
+  let assistantMessage = '';
+  
     while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
-        const chunkValue = decoder.decode(value);
-        assistantMessage += chunkValue;
+        let chunkValue = decoder.decode(value);
 
-        if (terminalRef.current) {
-            terminalRef.current.echo(chunkValue);
+        // Process the chunk immediately for display
+        let tempMessage = '';
+        const regex = /0:"(.*?)"/g;
+        let match;
+        while ((match = regex.exec(chunkValue)) !== null) {
+            if (match[1]) {
+                tempMessage += match[1];
+            }
         }
+
+        assistantMessage += tempMessage;
     }
 
-    setMessageHistory((prevHistory) => [...prevHistory, { role: 'assistant', content: assistantMessage }]);
+    // After all chunks are processed, display the message
+    if (terminalRef.current && assistantMessage) {
+        // Replace escaped newline characters with a placeholder
+        const tempMessageWithPlaceholder = assistantMessage.replace(/\\n/g, '<newline>');
+        // Unescape the string
+        const unescapedMessage = JSON.parse(`"${tempMessageWithPlaceholder}"`);
+        // Replace the placeholder with actual newline characters
+        const formattedMessage = unescapedMessage.replace(/<newline>/g, '\n');
+        terminalRef.current.echo(formattedMessage, { typing: true, delay: 2 }); // Adjust delay as needed for speed
+    }
+
+
+// After all chunks are processed, update the message history once
+setMessageHistory((prevHistory) => [...prevHistory, { role: 'assistant', content: assistantMessage }]);
+terminalRef.current?.resume(); // Re-enable input after the last chunk is processed
 };
 
 return <div id="terminal"></div>;
