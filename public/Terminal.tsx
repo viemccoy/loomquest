@@ -24,35 +24,41 @@ const Terminal = () => {
 
 
     useEffect(() => {
-        if (!terminalRef.current) {
-            terminalRef.current = $('#terminal').terminal((command: string) => {
-                const commandParts = command.split(' ');
-                switch (commandParts[0]) {
-                  case 'api-key':
-                    if (commandParts.length > 1) {
-                      const newApiKey = command.slice(8); // Extract the API key from the 9th character onwards
-                      localStorage.setItem('apiKey', newApiKey);
-                      terminalRef.current?.echo('API key set successfully.');
-                    } else {
-                      terminalRef.current?.echo('Invalid API key command. Use: api-key $YOUR_API_KEY');
-                    }
-                    break;
-                  case 'model':
-                    if (commandParts.length > 1) {
-                      const newModel = commandParts[1];
-                      localStorage.setItem('model', newModel);
-                      terminalRef.current?.echo(`Model set to ${newModel}.`);
-                    } else {
-                      terminalRef.current?.echo('Invalid model command. Use: model $MODEL_NAME');
-                    }
-                    break;
-                  default:
-                    terminalRef.current?.pause(); // Disable input
-                    sendCommandToClaude(command);
-                    break;
-                }
-            }, {
-        greetings: `a project by Vie McCoy @ xenocognition.com <3
+      if (!terminalRef.current) {
+        terminalRef.current = $('#terminal').terminal((command: string) => {
+          const commandParts = command.split(' ');
+          switch (commandParts[0]) {
+            case 'api-key':
+              if (commandParts.length > 1) {
+                const newApiKey = command.slice(8); // Extract the API key from the 9th character onwards
+                localStorage.setItem('apiKey', newApiKey);
+                terminalRef.current?.echo('API key set successfully.');
+              } else {
+                terminalRef.current?.echo('Invalid API key command. Use: api-key $YOUR_API_KEY');
+              }
+              break;
+            case 'model':
+              if (commandParts.length > 1) {
+                const newModel = commandParts[1];
+                localStorage.setItem('model', newModel);
+                terminalRef.current?.echo(`Model set to ${newModel}.`);
+              } else {
+                terminalRef.current?.echo('Invalid model command. Use: model $MODEL_NAME');
+              }
+              break;
+            default:
+              terminalRef.current?.pause(); // Disable input
+              if (command.startsWith('world.init')) {
+                setIsFirstSend(true); // Reset the conversation
+                setMessageHistory([]); // Clear the message history
+                sendCommandToClaude(command); // Send the entire command to Claude
+              } else {
+                sendCommandToClaude(command);
+              }
+              break;
+          }
+        }, {
+        greetings: `LOOMQUEST v.0.1.1 - a project by Vie McCoy @ xenocognition.com <3
 made with love for Adventurers, Explorers, and Cartographers of the Collective Unconscious.
 
  _        _______  _______  _______  _______           _______  _______ _________
@@ -89,6 +95,8 @@ allow you to bring certain... things... back with you. Be careful what they are.
 }
 }, []);
 
+const [isFirstSend, setIsFirstSend] = useState(true);
+
 const sendCommandToClaude = async (command: string) => {
     // Retrieve the apiKey from localStorage
     const apiKey = localStorage.getItem('apiKey');
@@ -104,18 +112,21 @@ const sendCommandToClaude = async (command: string) => {
     }
 
     const updatedMessageHistory = [...messageHistory, { role: 'user', content: command }];
+    console.log('Before updating message history:', messageHistory);
     setMessageHistory(updatedMessageHistory); // Update state
+    console.log('After updating message history:', updatedMessageHistory);
 
-    // Assuming you're sending the apiKey as part of the request body
+    console.log('Sending message history to API:', updatedMessageHistory);
     const response = await fetch('./api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        messages: updatedMessageHistory, // Include the updated message history
+        messages: updatedMessageHistory,
         apiKey,
         model,
+        isFirstSend, // Include the isFirstSend flag
       }),
     });
 
@@ -197,6 +208,7 @@ const sendCommandToClaude = async (command: string) => {
 
     // After all chunks are processed, update the message history and add a newline
     setMessageHistory((prevHistory) => [...prevHistory, { role: 'assistant', content: assistantMessage }]);
+    setIsFirstSend(false); // Set isFirstSend to false after the first send
     terminalRef.current?.echo('', { newline: true }); // Add a newline after the complete response
     terminalRef.current?.resume(); // Re-enable input after the last chunk is processed
     scrollToBottom(); // Scroll to the bottom after the complete response is displayed

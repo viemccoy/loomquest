@@ -10,7 +10,7 @@ export default async function handler(req: NextRequest) {
   console.log(`Received ${req.method} request with body: ${await clonedReq.text()}`);
   
   if (req.method === 'POST') {
-    const { messages, apiKey, model } = await req.json();
+    const { messages, apiKey, model, isFirstSend } = await req.json();
 
     const userResponse = {
       role: 'user',
@@ -51,11 +51,9 @@ export default async function handler(req: NextRequest) {
       After these three descriptions, I wait for the next user input. I will not simulate user input.`,
     };
 
-    const updatedMessages = [
-      userResponse,
-      systemPrompt,
-      ...messages,
-    ];
+    const updatedMessages = isFirstSend
+      ? [userResponse, systemPrompt, ...messages]
+      : messages;
 
     const anthropic = new Anthropic({
       apiKey: apiKey || '',
