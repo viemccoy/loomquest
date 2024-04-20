@@ -2,7 +2,11 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import Anthropic from '@anthropic-ai/sdk';
 import { AnthropicStream, StreamingTextResponse } from 'ai';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+interface NextApiResponseWithFlush extends NextApiResponse {
+  flush: () => void;
+}
+
+export default async function handler(req: NextApiRequest, res: NextApiResponseWithFlush) {
   console.log(`Received ${req.method} request with body: ${JSON.stringify(req.body)}`);
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Methods', ['POST']);
@@ -90,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       let result = await reader.read();
           while (!result.done) {
               res.write(result.value);
-              res.flush(); // Flush the response to the client, don't get rid of this, removing breaks the code no idea why
+              res.flush();
               result = await reader.read();
           }
 
