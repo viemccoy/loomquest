@@ -57,7 +57,7 @@ export default async function handler(req: NextRequest) {
     
     const response = await anthropic.messages.create({
       model: model,
-      max_tokens: 300,
+      max_tokens: 800,
       messages: [userResponse, systemPrompt, ...messages],
       stream: true,
     });
