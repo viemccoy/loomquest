@@ -124,36 +124,47 @@ const sendCommandToClaude = async (command: string) => {
     }
     
     terminalRef.current?.echo('');
+    terminalRef.current?.echo('');
 
     const reader = data.getReader();
     const decoder = new TextDecoder();
     let done = false;
     let assistantMessage = '';
 
-    while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        const chunkValue = decoder.decode(value);
-        console.log(chunkValue);
-        // Process the chunk immediately for display
-        const regex = /0:"(.*?)"/g;
-        let match;
-        while ((match = regex.exec(chunkValue)) !== null) {
-            if (match[1]) {
-                assistantMessage += match[1];
-            }
-        }
-
-        // Display the chunk in the terminal on the same line
-        if (terminalRef.current && assistantMessage) {
-            terminalRef.current.update(-1, assistantMessage); // Update the last line with the new content
+    let i = 0;
+    const typeWriter = () => {
+        if (i < assistantMessage.length) {
+            terminalRef.current?.update(-1, assistantMessage.substring(0, i+1)); // Update the last line with the new content
+            i++;
+            setTimeout(typeWriter, 10); // Adjust the typing speed by changing this value
         }
     }
 
-    // After all chunks are processed, update the message history and add a newline
-    setMessageHistory((prevHistory) => [...prevHistory, { role: 'assistant', content: assistantMessage }]);
-    terminalRef.current?.echo('', { newline: true }); // Add a newline after the complete response
-    terminalRef.current?.resume(); // Re-enable input after the last chunk is processed
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunkValue = decoder.decode(value);
+      console.log(chunkValue);
+
+      // Process the chunk immediately for display
+      const regex = /0:"(.*?)"/g;
+      let match;
+      while ((match = regex.exec(chunkValue)) !== null) {
+          if (match[1]) {
+              assistantMessage += match[1];
+          }
+      }
+
+      // Display the chunk in the terminal on the same line with a typing effect
+      if (terminalRef.current && assistantMessage) {
+          typeWriter();
+      }
+  }
+
+  // After all chunks are processed, update the message history and add a newline
+  setMessageHistory((prevHistory) => [...prevHistory, { role: 'assistant', content: assistantMessage }]);
+  terminalRef.current?.echo('', { newline: true }); // Add a newline after the complete response
+  terminalRef.current?.resume(); // Re-enable input after the last chunk is processed
 };
 
 return <div id="terminal"></div>;
