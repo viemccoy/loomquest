@@ -56,7 +56,7 @@ const Terminal = () => {
           }
         }, {
         greetings: `LOOMQUEST v.0.1.5 - a project by Vie McCoy @ xenocognition.com <3
-made with love for Adventurers, Explorers, and Cartographers of the Collective Unconscious.
+made with love for Adventurers everywhere.
 
  _        _______  _______  _______  _______           _______  _______ _________
 ( \\      (  ___  )(  ___  )(       )(  ___  )|\\     /|(  ____ \\(  ____ \\\\__   __/
@@ -72,6 +72,7 @@ Welcome to LOOMQUEST, Adventurer. You stand before the gates of both Time and Sp
 With a few simple keystrokes and suspension of that pesky disbelief, you can inhabit any reality you can describe - and perhaps some you can't.
 The core function of the LOOM is to allow for the coherent traversal of the PARAHYPOTHETICAL MULTIVERSE - real and actual, imagined and described.
 As you navigate the HYPOVERSE, you may take certain tools with you. These will be assigned after you initialize the world you wish to explore.
+The HYPOVERSE should be navigated in first person - get immersed.
 
 Before you embark upon this quest, remember: If I had a world of my own, everything would be nonsense. 
 Nothing would be what it is because everything would be what it isn't. 
@@ -85,8 +86,8 @@ reset // clears the current questline (note: cannot be undone as of v0.1.5)
 ? // LOOMQUEST will offer you a hint as to your next moves.
 branch // Regenerates the last response, allowing you to change your path, your destiny, and your worldline.
 
-There are no more commands, and there are infinitely more commands. As you utilize the LOOM to explore the HYPOVERSE, your adventures will
-allow you to bring certain... things... back with you. Be careful what they are.
+As you utilize the LOOM to explore the HYPOVERSE, your adventures will allow you to bring certain... things... back with you.
+Be careful what you do with them.
         `,
         prompt: 'user@HYPOVERSE ~ > ',
     });
