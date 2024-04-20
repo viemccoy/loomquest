@@ -47,7 +47,7 @@ const Terminal = () => {
                 }
             }, {
         greetings: `a project by Vie McCoy @ xenocognition.com <3
-inspired by the works of Adventurers everywhere.
+made with love for Adventurers everywhere.
 
  _        _______  _______  _______  _______           _______  _______ _________
 ( \\      (  ___  )(  ___  )(       )(  ___  )|\\     /|(  ____ \\(  ____ \\\\__   __/
