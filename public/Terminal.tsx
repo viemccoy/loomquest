@@ -10,13 +10,9 @@ interface Message {
 }
 
 const Terminal = () => {
-    const [messageHistory, setMessageHistory] = useState<Message[]>(() => {
-        // Initialize messageHistory from localStorage or as an empty array
-        const savedHistory = localStorage.getItem('messageHistory');
-        return savedHistory ? JSON.parse(savedHistory) : [];
-    });
-    const terminalRef = useRef<JQueryTerminal | null>(null);
-    const terminalContainerRef = useRef<HTMLDivElement | null>(null);
+  const [messageHistory, setMessageHistory] = useState<Message[]>([]);
+  const terminalRef = useRef<JQueryTerminal | null>(null);
+  const terminalContainerRef = useRef<HTMLDivElement | null>(null);
 
     const scrollToBottom = () => {
       terminalContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -46,16 +42,16 @@ const Terminal = () => {
                 terminalRef.current?.echo('Invalid model command. Use: model $MODEL_NAME');
               }
               break;
-            default:
-          terminalRef.current?.pause(); // Disable input
-          if (command.startsWith('world.init')) {
-            setIsFirstSend(true); // Reset the conversation
-            setMessageHistory([]); // Clear the message history
-            localStorage.removeItem('messageHistory'); // Remove the message history from localStorage
-            sendCommandToClaude(command); // Send the entire command to Claude
-          } else {
-            sendCommandToClaude(command);
-          }
+              case 'reset':
+          setMessageHistory([]); // Clear the message history
+          terminalRef.current?.resume();
+          break;
+          default:
+            terminalRef.current?.pause(); // Disable input
+            setMessageHistory((prevMessageHistory) => [
+              ...prevMessageHistory,
+              { role: 'user', content: command },
+            ]);
           break;
           }
         }, {
@@ -96,26 +92,29 @@ allow you to bring certain... things... back with you. Be careful what they are.
 }
 }, []);
 
-const [isFirstSend, setIsFirstSend] = useState(true);
+useEffect(() => {
+  if (messageHistory.length > 0) {
+    const lastMessage = messageHistory[messageHistory.length - 1];
+    if (lastMessage.role === 'user') {
+      sendCommandToClaude([...messageHistory]);
+    }
+  }
+}, [messageHistory]);
 
-const sendCommandToClaude = async (command: string) => {
-    // Retrieve the apiKey from localStorage
+const sendCommandToClaude = async (updatedMessageHistory: Message[]) => {
+  // Retrieve the apiKey from localStorage
     const apiKey = localStorage.getItem('apiKey');
     if (!apiKey) {
         console.error('API key is not set.');
         terminalRef.current?.echo('API key is not set. Please set the API key using "api-key $YOUR_API_KEY".');
         return;
     }
+    console.log(updatedMessageHistory);
 
     let model = localStorage.getItem('model') || 'claude-3-opus'; // Use 'claude-3-opus' as the default model if not set
     if (model === 'claude-3-opus') {
         model = 'claude-3-opus-20240229'; // Use 'claude-3-opus-20240229' if the model is 'claude-3-opus'
     }
-    
-    const updatedMessageHistory = [...messageHistory, { role: 'user', content: command }];
-    setMessageHistory(updatedMessageHistory);
-
-    console.log(updatedMessageHistory);
 
     const response = await fetch('./api/chat', {
       method: 'POST',
@@ -126,7 +125,6 @@ const sendCommandToClaude = async (command: string) => {
         messages: updatedMessageHistory,
         apiKey,
         model,
-        isFirstSend,
       }),
     });
 
@@ -207,14 +205,14 @@ const sendCommandToClaude = async (command: string) => {
       }
   }
 
-    const finalMessageHistory = [...updatedMessageHistory, { role: 'assistant', content: assistantMessage }];
-    setMessageHistory(finalMessageHistory);
-    localStorage.setItem('messageHistory', JSON.stringify(finalMessageHistory));
+  setMessageHistory((prevMessageHistory) => [
+    ...prevMessageHistory,
+    { role: 'assistant', content: assistantMessage },
+  ]);
 
-    setIsFirstSend(false);
-    terminalRef.current?.echo('', { newline: true }); 
-    terminalRef.current?.resume();
-    scrollToBottom();
+  terminalRef.current?.echo('', { newline: true });
+  terminalRef.current?.resume();
+  scrollToBottom();
 };
 
 return (

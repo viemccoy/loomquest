@@ -10,7 +10,7 @@ export default async function handler(req: NextRequest) {
   console.log(`Received ${req.method} request with body: ${await clonedReq.text()}`);
   
   if (req.method === 'POST') {
-    const { messages, apiKey, model, isFirstSend } = await req.json();
+    const { messages, apiKey, model } = await req.json();
 
     const userResponse = {
       role: 'user',
@@ -51,28 +51,14 @@ export default async function handler(req: NextRequest) {
       After these three descriptions, I wait for the next user input. I will not simulate user input.`,
     };
 
-    const updatedMessages = isFirstSend
-      ? [userResponse, systemPrompt, ...messages]
-      : messages;
-
     const anthropic = new Anthropic({
       apiKey: apiKey || '',
     });
     
-    console.log('Updated messages:', updatedMessages);
-
-    interface Message {
-      role: string;
-      content: string;
-    }
-    
     const response = await anthropic.messages.create({
       model: model,
       max_tokens: 300,
-      messages: updatedMessages.map((message: Message) => ({
-        role: message.role,
-        content: message.content,
-      })),
+      messages: [userResponse, systemPrompt, ...messages],
       stream: true,
     });
   
