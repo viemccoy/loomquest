@@ -107,11 +107,11 @@ const sendCommandToClaude = async (updatedMessageHistory: Message[]) => {
   // Retrieve the apiKey from localStorage
     const apiKey = localStorage.getItem('apiKey');
     if (!apiKey) {
-        console.error('API key is not set.');
+        //console.error('API key is not set.');
         terminalRef.current?.echo('API key is not set. Please set the API key using "api-key $YOUR_API_KEY".');
         return;
     }
-    console.log(updatedMessageHistory);
+    //console.log(updatedMessageHistory);
 
     let model = localStorage.getItem('model') || 'claude-3-opus'; // Use 'claude-3-opus' as the default model if not set
     if (model === 'claude-3-opus') {
@@ -186,7 +186,7 @@ const sendCommandToClaude = async (updatedMessageHistory: Message[]) => {
           continue;
       }
   
-      console.log(chunkValue);
+      //console.log(chunkValue);
   
       // Process the chunk immediately for display
       const regex = /0:"(.*?)"/g;
