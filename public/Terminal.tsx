@@ -132,39 +132,59 @@ const sendCommandToClaude = async (command: string) => {
     let assistantMessage = '';
 
     let i = 0;
+    let lastProcessedIndex = 0;
+
     const typeWriter = () => {
-        if (i < assistantMessage.length) {
-            terminalRef.current?.update(-1, assistantMessage.substring(0, i+1)); // Update the last line with the new content
-            i++;
-            setTimeout(typeWriter, 10); // Adjust the typing speed by changing this value
-        }
+        return new Promise((resolve) => {
+            const typeWriterInterval = setInterval(() => {
+                if (lastProcessedIndex < assistantMessage.length) {
+                    terminalRef.current?.update(-1, assistantMessage.substring(0, lastProcessedIndex+1)); // Update the last line with the new content
+                    lastProcessedIndex++;
+                } else {
+                    clearInterval(typeWriterInterval);
+                    resolve(null);
+                }
+            }, 10); // Adjust the typing speed by changing this value
+        });
     }
+
+    let prevContent = '';
 
     while (!done) {
       const { value, done: doneReading } = await reader.read();
       done = doneReading;
       const chunkValue = decoder.decode(value);
+  
+      // Check if the chunk is properly formatted
+      if (!chunkValue.match(/0:"(.*?)"/g)) {
+          continue;
+      }
+  
       console.log(chunkValue);
-
+  
       // Process the chunk immediately for display
       const regex = /0:"(.*?)"/g;
       let match;
       while ((match = regex.exec(chunkValue)) !== null) {
           if (match[1]) {
-              assistantMessage += match[1];
+              const newContent = match[1];
+              if (newContent !== prevContent) {
+                  assistantMessage += newContent;
+                  prevContent = newContent;
+              }
           }
       }
-
+  
       // Display the chunk in the terminal on the same line with a typing effect
       if (terminalRef.current && assistantMessage) {
-          typeWriter();
+          await typeWriter();
       }
   }
 
-  // After all chunks are processed, update the message history and add a newline
-  setMessageHistory((prevHistory) => [...prevHistory, { role: 'assistant', content: assistantMessage }]);
-  terminalRef.current?.echo('', { newline: true }); // Add a newline after the complete response
-  terminalRef.current?.resume(); // Re-enable input after the last chunk is processed
+    // After all chunks are processed, update the message history and add a newline
+    setMessageHistory((prevHistory) => [...prevHistory, { role: 'assistant', content: assistantMessage }]);
+    terminalRef.current?.echo('', { newline: true }); // Add a newline after the complete response
+    terminalRef.current?.resume(); // Re-enable input after the last chunk is processed
 };
 
 return <div id="terminal"></div>;
