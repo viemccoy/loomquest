@@ -55,7 +55,7 @@ const Terminal = () => {
           break;
           }
         }, {
-        greetings: `LOOMQUEST v.0.1.2 - a project by Vie McCoy @ xenocognition.com <3
+        greetings: `LOOMQUEST v.0.1.5 - a project by Vie McCoy @ xenocognition.com <3
 made with love for Adventurers, Explorers, and Cartographers of the Collective Unconscious.
 
  _        _______  _______  _______  _______           _______  _______ _________
@@ -81,6 +81,7 @@ Commands:
 api-key $ANTHROPIC_API_KEY // replace $ANTHROPIC_API_KEY with your actual API key. we will not store it, nor could we. run this first.
 model $MODEL // replace $MODEL with either claude-3-opus or claude-3-sonnet. more coming soon. defaults to claude-3-opus.
 world.init // initializes the world, may be followed by any type of description
+reset // clears the current questline (note: cannot be undone as of v0.1.5)
 ? // LOOMQUEST will offer you a hint as to your next moves.
 branch // Regenerates the last response, allowing you to change your path, your destiny, and your worldline.
 
