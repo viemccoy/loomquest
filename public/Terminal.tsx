@@ -111,7 +111,7 @@ const sendCommandToClaude = async (updatedMessageHistory: Message[]) => {
         terminalRef.current?.echo('API key is not set. Please set the API key using "api-key $YOUR_API_KEY".');
         return;
     }
-    //console.log(updatedMessageHistory);
+    console.log(updatedMessageHistory);
 
     let model = localStorage.getItem('model') || 'claude-3-opus'; // Use 'claude-3-opus' as the default model if not set
     if (model === 'claude-3-opus') {
@@ -176,41 +176,42 @@ const sendCommandToClaude = async (updatedMessageHistory: Message[]) => {
     let prevContent = '';
     
 
+    let completeAssistantMessage = ''; // New accumulator for the complete message
+
     while (!done) {
       const { value, done: doneReading } = await reader.read();
       done = doneReading;
       const chunkValue = decoder.decode(value);
-  
+
       // Check if the chunk is properly formatted
       if (!chunkValue.match(/0:"(.*?)"/g)) {
-          continue;
+        continue;
       }
-  
-      //console.log(chunkValue);
-  
+
       // Process the chunk immediately for display
       const regex = /0:"(.*?)"/g;
       let match;
       while ((match = regex.exec(chunkValue)) !== null) {
-          if (match[1]) {
-              const newContent = match[1];
-              if (newContent !== prevContent) {
-                  assistantMessage += newContent;
-                  prevContent = newContent;
-              }
+        if (match[1]) {
+          const newContent = match[1];
+          if (newContent !== prevContent) {
+            assistantMessage += newContent;
+            completeAssistantMessage += newContent; // Accumulate the complete message
+            prevContent = newContent;
           }
+        }
       }
-  
+
       // Display the chunk in the terminal on the same line with a typing effect
       if (terminalRef.current && assistantMessage) {
-          await typeWriter();
+        await typeWriter();
       }
-  }
+    }
 
-  setMessageHistory((prevMessageHistory) => [
-    ...prevMessageHistory,
-    { role: 'assistant', content: assistantMessage },
-  ]);
+    setMessageHistory((prevMessageHistory) => [
+      ...prevMessageHistory,
+      { role: 'assistant', content: completeAssistantMessage }, // Use the complete message
+    ]);
 
   terminalRef.current?.echo('', { newline: true });
   terminalRef.current?.resume();
