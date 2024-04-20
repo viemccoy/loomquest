@@ -84,7 +84,7 @@ model $MODEL // replace $MODEL with either claude-3-opus or claude-3-sonnet. mor
 world.init // initializes the world, may be followed by any type of description
 reset // clears the current questline (note: cannot be undone as of v0.1.5)
 ? // LOOMQUEST will offer you a hint as to your next moves.
-branch // Regenerates the last response, allowing you to change your path, your destiny, and your worldline.
+branch // Regenerates the last response, allowing you to change your path, your destiny, and your worldline. (not implemented fully as of v0.1.7)
 
 As you utilize the LOOM to explore the HYPOVERSE, your adventures will allow you to bring certain... things... back with you.
 Be careful what you do with them.
