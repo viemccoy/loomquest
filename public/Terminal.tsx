@@ -135,18 +135,25 @@ const sendCommandToClaude = async (command: string) => {
     let lastProcessedIndex = 0;
 
     const typeWriter = () => {
-        return new Promise((resolve) => {
-            const typeWriterInterval = setInterval(() => {
-                if (lastProcessedIndex < assistantMessage.length) {
-                    terminalRef.current?.update(-1, assistantMessage.substring(0, lastProcessedIndex+1)); // Update the last line with the new content
-                    lastProcessedIndex++;
-                } else {
-                    clearInterval(typeWriterInterval);
-                    resolve(null);
-                }
-            }, 10); // Adjust the typing speed by changing this value
-        });
-    }
+      return new Promise((resolve) => {
+          const typeWriterInterval = setInterval(() => {
+              if (lastProcessedIndex < assistantMessage.length) {
+                  // Check if the next two characters are a newline
+                  if (assistantMessage.substring(lastProcessedIndex, lastProcessedIndex + 2) === '\\n') {
+                      terminalRef.current?.echo(''); // Echo a newline to start a new line
+                      assistantMessage = assistantMessage.substring(lastProcessedIndex + 2); // Remove the processed part including the newline
+                      lastProcessedIndex = 0; // Reset the index for the new line
+                  } else {
+                      terminalRef.current?.update(-1, assistantMessage.substring(0, lastProcessedIndex + 1)); // Update the last line with the new content
+                      lastProcessedIndex++;
+                  }
+              } else {
+                  clearInterval(typeWriterInterval);
+                  resolve(null);
+              }
+          }, 10); // Adjust the typing speed by changing this value
+      });
+  }
 
     let prevContent = '';
 
