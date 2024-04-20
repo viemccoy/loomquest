@@ -94,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponseW
       let result = await reader.read();
           while (!result.done) {
               res.write(result.value);
-              res.flush();
+              //res.flush();
               result = await reader.read();
           }
 
