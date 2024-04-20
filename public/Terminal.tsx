@@ -101,7 +101,7 @@ const sendCommandToClaude = async (command: string) => {
     setMessageHistory(updatedMessageHistory); // Update state
 
     // Assuming you're sending the apiKey as part of the request body
-    const response = await fetch('/api/chat', {
+    const response = await fetch('./api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
