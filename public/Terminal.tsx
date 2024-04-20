@@ -102,15 +102,15 @@ const sendCommandToClaude = async (command: string) => {
 
     // Assuming you're sending the apiKey as part of the request body
     const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            messages: updatedMessageHistory,
-            apiKey,
-            model,
-        }),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messages: updatedMessageHistory, // Include the updated message history
+        apiKey,
+        model,
+      }),
     });
 
     if (!response.ok) {
