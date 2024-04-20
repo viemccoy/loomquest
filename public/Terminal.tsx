@@ -47,7 +47,7 @@ const Terminal = () => {
                 }
             }, {
         greetings: `a project by Vie McCoy @ xenocognition.com <3
-inspired by the works of Cyborgism, Nous Research, and Adventurers everywhere.
+inspired by the works of Adventurers everywhere.
 
  _        _______  _______  _______  _______           _______  _______ _________
 ( \\      (  ___  )(  ___  )(       )(  ___  )|\\     /|(  ____ \\(  ____ \\\\__   __/
@@ -84,6 +84,9 @@ allow you to bring certain... things... back with you. Be careful what they are.
 }, []);
 
 const sendCommandToClaude = async (command: string) => {
+
+    const socket = new WebSocket('ws://localhost:3000/api/chat');
+    
     // Retrieve the apiKey from localStorage
     const apiKey = localStorage.getItem('apiKey');
     if (!apiKey) {
@@ -124,10 +127,10 @@ const sendCommandToClaude = async (command: string) => {
     }
 
     const reader = data.getReader();
-  const decoder = new TextDecoder();
-  let done = false;
-  let assistantMessage = '';
-  
+    const decoder = new TextDecoder();
+    let done = false;
+    let assistantMessage = '';
+    
     while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
@@ -143,18 +146,16 @@ const sendCommandToClaude = async (command: string) => {
             }
         }
 
-        assistantMessage += tempMessage;
-    }
-
-    // After all chunks are processed, display the message
-    if (terminalRef.current && assistantMessage) {
-        // Replace escaped newline characters with a placeholder
-        const tempMessageWithPlaceholder = assistantMessage.replace(/\\n/g, '<newline>');
-        // Unescape the string
-        const unescapedMessage = JSON.parse(`"${tempMessageWithPlaceholder}"`);
-        // Replace the placeholder with actual newline characters
-        const formattedMessage = unescapedMessage.replace(/<newline>/g, '\n');
-        terminalRef.current.echo(formattedMessage, { typing: true, delay: 2 }); // Adjust delay as needed for speed
+        // Display the chunk with typing animation immediately
+        if (terminalRef.current && tempMessage) {
+            // Replace escaped newline characters with a placeholder
+            const tempMessageWithPlaceholder = tempMessage.replace(/\\n/g, '<newline>');
+            // Unescape the string
+            const unescapedMessage = JSON.parse(`"${tempMessageWithPlaceholder}"`);
+            // Replace the placeholder with actual newline characters
+            const formattedMessage = unescapedMessage.replace(/<newline>/g, '\n');
+            terminalRef.current.echo(formattedMessage, { typing: true, delay: 2 }); // Adjust delay as needed for speed
+        }
     }
 
 

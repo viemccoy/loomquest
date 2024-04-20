@@ -88,11 +88,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Read the stream and send the chunks of data
       const reader = textResponse.body.getReader();
       let result = await reader.read();
-      while (!result.done) {
-        res.write(result.value);
-        result = await reader.read();
-      }
-  
+        while (!result.done) {
+            res.write(result.value);
+            res.flush(); // Flush the response to the client
+            result = await reader.read();
+        }
+
       // End the response
       res.end();
     } else {
