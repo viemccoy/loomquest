@@ -220,6 +220,7 @@ const sendCommandToClaude = async (updatedMessageHistory: Message[]) => {
 
 return (
   <div ref={terminalContainerRef}>
+    <title> LOOMQUEST </title>
     <div id="terminal"></div>
   </div>
 );
