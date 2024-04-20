@@ -16,6 +16,12 @@ const Terminal = () => {
         return savedHistory ? JSON.parse(savedHistory) : [];
     });
     const terminalRef = useRef<JQueryTerminal | null>(null);
+    const terminalContainerRef = useRef<HTMLDivElement | null>(null);
+
+    const scrollToBottom = () => {
+      terminalContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    };
+
 
     useEffect(() => {
         if (!terminalRef.current) {
@@ -151,6 +157,7 @@ const sendCommandToClaude = async (command: string) => {
                   clearInterval(typeWriterInterval);
                   resolve(null);
               }
+              scrollToBottom(); // Scroll to the bottom after each character is typed
           }, 10); // Adjust the typing speed by changing this value
       });
   }
@@ -192,9 +199,14 @@ const sendCommandToClaude = async (command: string) => {
     setMessageHistory((prevHistory) => [...prevHistory, { role: 'assistant', content: assistantMessage }]);
     terminalRef.current?.echo('', { newline: true }); // Add a newline after the complete response
     terminalRef.current?.resume(); // Re-enable input after the last chunk is processed
+    scrollToBottom(); // Scroll to the bottom after the complete response is displayed
 };
 
-return <div id="terminal"></div>;
+return (
+  <div ref={terminalContainerRef}>
+    <div id="terminal"></div>
+  </div>
+);
 };
 
 export default Terminal;
