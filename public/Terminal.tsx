@@ -47,18 +47,19 @@ const Terminal = () => {
               }
               break;
             default:
-              terminalRef.current?.pause(); // Disable input
-              if (command.startsWith('world.init')) {
-                setIsFirstSend(true); // Reset the conversation
-                setMessageHistory([]); // Clear the message history
-                sendCommandToClaude(command); // Send the entire command to Claude
-              } else {
-                sendCommandToClaude(command);
-              }
-              break;
+          terminalRef.current?.pause(); // Disable input
+          if (command.startsWith('world.init')) {
+            setIsFirstSend(true); // Reset the conversation
+            setMessageHistory([]); // Clear the message history
+            localStorage.removeItem('messageHistory'); // Remove the message history from localStorage
+            sendCommandToClaude(command); // Send the entire command to Claude
+          } else {
+            sendCommandToClaude(command);
+          }
+          break;
           }
         }, {
-        greetings: `LOOMQUEST v.0.1.1 - a project by Vie McCoy @ xenocognition.com <3
+        greetings: `LOOMQUEST v.0.1.2 - a project by Vie McCoy @ xenocognition.com <3
 made with love for Adventurers, Explorers, and Cartographers of the Collective Unconscious.
 
  _        _______  _______  _______  _______           _______  _______ _________
@@ -110,13 +111,12 @@ const sendCommandToClaude = async (command: string) => {
     if (model === 'claude-3-opus') {
         model = 'claude-3-opus-20240229'; // Use 'claude-3-opus-20240229' if the model is 'claude-3-opus'
     }
-
+    
     const updatedMessageHistory = [...messageHistory, { role: 'user', content: command }];
-    console.log('Before updating message history:', messageHistory);
-    setMessageHistory(updatedMessageHistory); // Update state
-    console.log('After updating message history:', updatedMessageHistory);
+    setMessageHistory(updatedMessageHistory);
 
-    console.log('Sending message history to API:', updatedMessageHistory);
+    console.log(updatedMessageHistory);
+
     const response = await fetch('./api/chat', {
       method: 'POST',
       headers: {
@@ -126,7 +126,7 @@ const sendCommandToClaude = async (command: string) => {
         messages: updatedMessageHistory,
         apiKey,
         model,
-        isFirstSend, // Include the isFirstSend flag
+        isFirstSend,
       }),
     });
 
@@ -174,6 +174,7 @@ const sendCommandToClaude = async (command: string) => {
   }
 
     let prevContent = '';
+    
 
     while (!done) {
       const { value, done: doneReading } = await reader.read();
@@ -206,12 +207,14 @@ const sendCommandToClaude = async (command: string) => {
       }
   }
 
-    // After all chunks are processed, update the message history and add a newline
-    setMessageHistory((prevHistory) => [...prevHistory, { role: 'assistant', content: assistantMessage }]);
-    setIsFirstSend(false); // Set isFirstSend to false after the first send
-    terminalRef.current?.echo('', { newline: true }); // Add a newline after the complete response
-    terminalRef.current?.resume(); // Re-enable input after the last chunk is processed
-    scrollToBottom(); // Scroll to the bottom after the complete response is displayed
+    const finalMessageHistory = [...updatedMessageHistory, { role: 'assistant', content: assistantMessage }];
+    setMessageHistory(finalMessageHistory);
+    localStorage.setItem('messageHistory', JSON.stringify(finalMessageHistory));
+
+    setIsFirstSend(false);
+    terminalRef.current?.echo('', { newline: true }); 
+    terminalRef.current?.resume();
+    scrollToBottom();
 };
 
 return (

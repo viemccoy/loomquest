@@ -58,12 +58,22 @@ export default async function handler(req: NextRequest) {
     const anthropic = new Anthropic({
       apiKey: apiKey || '',
     });
-  
+    
+    console.log('Updated messages:', updatedMessages);
+
+    interface Message {
+      role: string;
+      content: string;
+    }
+    
     const response = await anthropic.messages.create({
-      messages: updatedMessages,
       model: model,
-      stream: true,
       max_tokens: 300,
+      messages: updatedMessages.map((message: Message) => ({
+        role: message.role,
+        content: message.content,
+      })),
+      stream: true,
     });
   
     const stream = AnthropicStream(response);
