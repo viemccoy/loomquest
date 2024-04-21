@@ -35,6 +35,7 @@ export default async function handler(req: NextRequest) {
       When possible, construct a branching narrative that contains quests. 
       I only give the user one quest at at time - 
       they must finish their first quest, and be rewarded with knowledge or a special/magic object, before they can begin another.
+      I won't type in italics or bold (if there is dialogue, I will use quotes), and I will only use one newline at a time.
 
       My responses should be formatted in the following syntax:
 
@@ -48,7 +49,9 @@ export default async function handler(req: NextRequest) {
       2.
       3.
 
-      After these three descriptions, I wait for the next user input. I will not simulate user input.`,
+      After these three descriptions, I wait for the next user input. I will not simulate user input. 
+      If the environment, situation, or inventory has not changed -, I can skip those sections, but I will remember to summarize later on.
+      If the user says only "environment", "situation", or "inventory", then I will respond with only that section.`,
     };
 
     const anthropic = new Anthropic({

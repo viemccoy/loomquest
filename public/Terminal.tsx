@@ -42,10 +42,10 @@ const Terminal = () => {
                 terminalRef.current?.echo('Invalid model command. Use: model $MODEL_NAME');
               }
               break;
-              case 'reset':
-          setMessageHistory([]); // Clear the message history
-          terminalRef.current?.resume();
-          break;
+            case 'reset':
+              setMessageHistory([]); // Clear the message history
+              terminalRef.current?.resume();
+              break;
           default:
             terminalRef.current?.pause(); // Disable input
             setMessageHistory((prevMessageHistory) => [
@@ -55,7 +55,7 @@ const Terminal = () => {
           break;
           }
         }, {
-        greetings: `LOOMQUEST v.0.1.7 M3RLIN - a project by Vie McCoy @ xenocognition.com <3
+        greetings: `LOOMQUEST v.0.1.8 M3RLIN - a project by Vie McCoy @ xenocognition.com <3
 made with love for Adventurers everywhere.
 
  _        _______  _______  _______  _______           _______  _______ _________
@@ -84,7 +84,10 @@ model $MODEL // replace $MODEL with either claude-3-opus or claude-3-sonnet. mor
 world.init // initializes the world, may be followed by any type of description
 reset // clears the current questline (note: cannot be undone as of v0.1.5)
 ? // LOOMQUEST will offer you a hint as to your next moves.
-branch // Regenerates the last response, allowing you to change your path, your destiny, and your worldline. (not implemented fully as of v0.1.7)
+branch // Regenerates the last response, allowing you to change your path, your destiny, and your worldline.
+environment // details the current environment
+situation // details the current situation
+inventory // lists everything in your inventory
 
 As you utilize the LOOM to explore the HYPOVERSE, your adventures will allow you to bring certain... things... back with you.
 Be careful what you do with them.
@@ -95,23 +98,64 @@ Be careful what you do with them.
 }, []);
 
 useEffect(() => {
+  if (messageHistory.length > 2) {
+    const lastMessage = messageHistory[messageHistory.length - 1];
+    const secondLastMessage = messageHistory[messageHistory.length - 2];
+    if (
+      lastMessage &&
+      lastMessage.role === 'user' &&
+      (lastMessage.content === 'branch' || lastMessage.content === 'mu') &&
+      secondLastMessage &&
+      secondLastMessage.role === 'assistant'
+    ) {
+      const updatedMessageHistory = messageHistory.slice(0, -2); // Remove the last assistant message and the "branch" or "mu" command
+      const lastUserMessage = updatedMessageHistory[updatedMessageHistory.length - 1]; // Get the last user message
+      if (lastUserMessage && lastUserMessage.role === 'user') {
+        setMessageHistory(updatedMessageHistory); // Update the message history state without the last user message
+      } else {
+        setMessageHistory(updatedMessageHistory);
+        terminalRef.current?.echo('No world initialized yet!');
+        terminalRef.current?.resume();
+      }
+    }
+  } else if (messageHistory.length === 1) {
+    const lastMessage = messageHistory[messageHistory.length - 1];
+    if (
+      lastMessage &&
+      lastMessage.role === 'user' &&
+      (lastMessage.content === 'branch' || lastMessage.content === 'mu')
+    ) {
+      setMessageHistory([]); // Clear the message history
+      terminalRef.current?.echo('No world initialized yet!');
+      terminalRef.current?.resume();
+    }
+  }
+}, [messageHistory]);
+
+useEffect(() => {
   if (messageHistory.length > 0) {
     const lastMessage = messageHistory[messageHistory.length - 1];
-    if (lastMessage.role === 'user') {
+    if (lastMessage.role === 'user' && lastMessage.content !== 'branch' && lastMessage.content !== 'mu') {
       sendCommandToClaude([...messageHistory]);
     }
   }
 }, [messageHistory]);
 
 const sendCommandToClaude = async (updatedMessageHistory: Message[]) => {
-  // Retrieve the apiKey from localStorage
+  if (updatedMessageHistory.length === 0) {
+    terminalRef.current?.echo('No world initialized yet!');
+    terminalRef.current?.resume();
+    return;
+  }
+
+
     const apiKey = localStorage.getItem('apiKey');
     if (!apiKey) {
         //console.error('API key is not set.');
         terminalRef.current?.echo('API key is not set. Please set the API key using "api-key $YOUR_API_KEY".');
         return;
     }
-    //console.log(updatedMessageHistory);
+    console.log(updatedMessageHistory);
 
     let model = localStorage.getItem('model') || 'claude-3-opus'; // Use 'claude-3-opus' as the default model if not set
     if (model === 'claude-3-opus') {
