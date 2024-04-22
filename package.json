@@ -11,6 +11,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.20.6",
     "@types/jquery": "^3.5.29",
+    "@vercel/analytics": "^1.2.2",
     "ai": "^3.0.24",
     "jquery": "^3.7.1",
     "jquery.terminal": "^2.39.3",

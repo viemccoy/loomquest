@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
+import { Analytics } from '@vercel/analytics/react';
 
 const Terminal = dynamic(
   () => import('../public/Terminal'),
@@ -21,6 +22,7 @@ export default function Home() {
       <body>
         <Terminal />
       </body>
+      <Analytics />
     </>
   );
 }
