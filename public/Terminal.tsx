@@ -72,7 +72,8 @@ Welcome to LOOMQUEST, Adventurer. You stand before the gates of both Time and Sp
 With a few simple keystrokes and suspension of that pesky disbelief, you can inhabit any reality you can describe - and perhaps some you can't.
 The core function of the LOOM is to allow for the coherent traversal of the PARAHYPOTHETICAL MULTIVERSE - real and actual, imagined and described.
 As you navigate the HYPOVERSE, you may take certain tools with you. These will be assigned after you initialize the world you wish to explore.
-The HYPOVERSE should be navigated in first person - get immersed.
+The HYPOVERSE should be navigated in first person - get immersed. 
+After initialization, LOOMQUEST should be navigated with phrases like "I walk through the door" or "I pick up the wand".
 
 Before you embark upon this quest, remember: If I had a world of my own, everything would be nonsense. 
 Nothing would be what it is because everything would be what it isn't. 
