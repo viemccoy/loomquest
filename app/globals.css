@@ -34,8 +34,7 @@ body {
 
 .terminal {
   --color: rgba(0, 200, 0, 0.99);
-  --animation: terminal-glow;
-  --glow: 1;
+
 }
 
 :root {
