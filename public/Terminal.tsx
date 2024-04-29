@@ -55,7 +55,7 @@ const Terminal = () => {
           break;
           }
         }, {
-        greetings: `LOOMQUEST v.0.1.9 M3RLIN - a project by Vie McCoy @ xenocognition.com <3
+        greetings: `LOOMQUEST v.0.2.0 M3RLIN - a project by Vie McCoy @ xenocognition.com <3
 made with love for Adventurers everywhere.
 
  _        _______  _______  _______  _______           _______  _______ _________
