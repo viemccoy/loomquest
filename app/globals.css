@@ -31,3 +31,18 @@ body {
     text-wrap: balance;
   }
 }
+
+.terminal {
+  --color: rgba(0, 200, 0, 0.99);
+  --animation: terminal-glow;
+  --glow: 1;
+}
+
+:root {
+  --size: 1.4;
+  --font: msdos;
+}
+@font-face {
+  font-family: msdos;
+  src: url("https://cdn.jsdelivr.net/gh/jcubic/static/assets/dos-vga.ttf");
+}
