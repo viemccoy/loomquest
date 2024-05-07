@@ -30,6 +30,7 @@ body {
   .text-balance {
     white-space: normal;
     word-wrap: break-word;
+    white-space: pre-wrap;
   }
 }
 
