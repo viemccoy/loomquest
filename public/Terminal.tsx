@@ -55,7 +55,7 @@ const Terminal = () => {
           break;
           }
         }, {
-        greetings: `LOOMQUEST v.0.2.2 M3RLIN - a project by Vie McCoy @ xenocognition.com <3
+        greetings: `LOOMQUEST v.0.2.3 M3RLIN - a project by Vie McCoy @ xenocognition.com <3
 made with love for Adventurers everywhere.
 
  _        _______  _______  _______  _______           _______  _______ _________
@@ -227,18 +227,25 @@ const sendCommandToClaude = async (updatedMessageHistory: Message[]) => {
       const { value, done: doneReading } = await reader.read();
       done = doneReading;
       const chunkValue = decoder.decode(value);
-
+    
+      // Print each chunk received
+      console.log('Chunk received:', chunkValue);
+    
       // Check if the chunk is properly formatted
       if (!chunkValue.match(/0:"(.*?)"/g)) {
         continue;
       }
-
+    
       // Process the chunk immediately for display
       const regex = /0:"(.*?)"/g;
       let match;
       while ((match = regex.exec(chunkValue)) !== null) {
         if (match[1]) {
-          const newContent = match[1];
+          let newContent = match[1];
+    
+          // Handle escaped newlines and backslashes
+          newContent = newContent.replace(/\\\\n/g, '\n').replace(/\\\\/g, '\\');
+    
           if (newContent !== prevContent) {
             assistantMessage += newContent;
             completeAssistantMessage += newContent; // Accumulate the complete message
@@ -246,21 +253,22 @@ const sendCommandToClaude = async (updatedMessageHistory: Message[]) => {
           }
         }
       }
-
+    
       // Display the chunk in the terminal on the same line with a typing effect
       if (terminalRef.current && assistantMessage) {
         await typeWriter();
       }
     }
-
+    
+    // Continue with the existing functionality to update message history and resume terminal
     setMessageHistory((prevMessageHistory) => [
       ...prevMessageHistory,
       { role: 'assistant', content: completeAssistantMessage }, // Use the complete message
     ]);
-
-  terminalRef.current?.echo('', { newline: true });
-  terminalRef.current?.resume();
-  scrollToBottom();
+    
+    terminalRef.current?.echo('', { newline: true });
+    terminalRef.current?.resume();
+    scrollToBottom();
 };
 
 return (
