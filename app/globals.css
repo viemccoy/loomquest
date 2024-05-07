@@ -36,6 +36,9 @@ body {
 
 .terminal {
   --color: rgba(0, 150, 0, 0.99);
+  word-wrap: normal;
+  word-break: keep-all; /* Prevents words from breaking */
+  white-space: pre-wrap; /* Keeps the formatting and wraps text */
 }
 
 :root {
